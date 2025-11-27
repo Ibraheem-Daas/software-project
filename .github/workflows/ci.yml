@@ -42,6 +42,7 @@ jobs:
         db.url=jdbc:postgresql://localhost:5432/library_test
         db.username=postgres
         db.password=postgres
+        db.driver=org.postgresql.Driver
         EOF
     
     - name: Build with Maven
