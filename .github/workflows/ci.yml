@@ -35,6 +35,15 @@ jobs:
         distribution: 'temurin'
         cache: maven
     
+    - name: Create test database properties
+      run: |
+        mkdir -p src/main/resources
+        cat > src/main/resources/db.properties << EOF
+        db.url=jdbc:postgresql://localhost:5432/library_test
+        db.username=postgres
+        db.password=postgres
+        EOF
+    
     - name: Build with Maven
       run: mvn -B clean compile
     
