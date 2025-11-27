@@ -45,6 +45,10 @@ jobs:
         db.driver=org.postgresql.Driver
         EOF
     
+    - name: Initialize database schema
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d library_test -f src/test/resources/schema.sql
+    
     - name: Build with Maven
       run: mvn -B clean compile
     
