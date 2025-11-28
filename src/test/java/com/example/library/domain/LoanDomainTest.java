@@ -19,17 +19,17 @@ class LoanDomainTest {
         LocalDate dueDate = LocalDate.of(2024, 1, 15);
         LocalDate returnDate = LocalDate.of(2024, 1, 14);
         
-        loan.setLoanId(1L);
-        loan.setUserId(100L);
-        loan.setItemId(200L);
+        loan.setLoanId(1);
+        loan.setUserId(100);
+        loan.setItemId(200);
         loan.setLoanDate(loanDate);
         loan.setDueDate(dueDate);
         loan.setReturnDate(returnDate);
         loan.setStatus("ACTIVE");
         
-        assertEquals(1L, loan.getLoanId());
-        assertEquals(100L, loan.getUserId());
-        assertEquals(200L, loan.getItemId());
+        assertEquals(1, loan.getLoanId());
+        assertEquals(100, loan.getUserId());
+        assertEquals(200, loan.getItemId());
         assertEquals(loanDate, loan.getLoanDate());
         assertEquals(dueDate, loan.getDueDate());
         assertEquals(returnDate, loan.getReturnDate());

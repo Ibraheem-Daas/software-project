@@ -15,13 +15,13 @@ class UserDomainTest {
     void testUserSettersAndGetters() {
         User user = new User();
         
-        user.setUserId(1L);
+        user.setUserId(1);
         user.setUsername("john_doe");
         user.setEmail("john@example.com");
         user.setPassword("securepass");
         user.setRole("MEMBER");
         
-        assertEquals(1L, user.getUserId());
+        assertEquals(1, user.getUserId());
         assertEquals("john_doe", user.getUsername());
         assertEquals("john@example.com", user.getEmail());
         assertEquals("securepass", user.getPassword());

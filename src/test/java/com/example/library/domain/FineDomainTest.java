@@ -18,15 +18,15 @@ class FineDomainTest {
         LocalDate issueDate = LocalDate.of(2024, 1, 1);
         LocalDate paidDate = LocalDate.of(2024, 1, 10);
         
-        fine.setFineId(1L);
-        fine.setLoanId(100L);
+        fine.setFineId(1);
+        fine.setLoanId(100);
         fine.setAmount(15.50);
         fine.setIssueDate(issueDate);
         fine.setPaidDate(paidDate);
         fine.setStatus("PAID");
         
-        assertEquals(1L, fine.getFineId());
-        assertEquals(100L, fine.getLoanId());
+        assertEquals(1, fine.getFineId());
+        assertEquals(100, fine.getLoanId());
         assertEquals(15.50, fine.getAmount(), 0.01);
         assertEquals(issueDate, fine.getIssueDate());
         assertEquals(paidDate, fine.getPaidDate());

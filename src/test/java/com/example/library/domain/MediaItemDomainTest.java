@@ -15,7 +15,7 @@ class MediaItemDomainTest {
     void testMediaItemSettersAndGetters() {
         MediaItem item = new MediaItem();
         
-        item.setItemId(1L);
+        item.setItemId(1);
         item.setTitle("The Great Gatsby");
         item.setAuthor("F. Scott Fitzgerald");
         item.setType("BOOK");
@@ -24,7 +24,7 @@ class MediaItemDomainTest {
         item.setTotalCopies(10);
         item.setAvailableCopies(7);
         
-        assertEquals(1L, item.getItemId());
+        assertEquals(1, item.getItemId());
         assertEquals("The Great Gatsby", item.getTitle());
         assertEquals("F. Scott Fitzgerald", item.getAuthor());
         assertEquals("BOOK", item.getType());
