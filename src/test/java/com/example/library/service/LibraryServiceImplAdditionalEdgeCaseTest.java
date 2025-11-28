@@ -2,7 +2,6 @@ package com.example.library.service;
 
 import com.example.library.domain.MediaItem;
 import com.example.library.domain.User;
-import com.example.library.service.BusinessException;
 import com.example.library.repository.FineRepository;
 import com.example.library.repository.LoanRepository;
 import com.example.library.repository.MediaItemRepository;

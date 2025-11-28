@@ -161,7 +161,7 @@ class LibraryServiceImplEdgeCaseTest {
         
         when(loanRepository.findById(1)).thenReturn(Optional.of(loan));
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
-        when(fineCalculator.calculateFine(any(), any())).thenReturn(BigDecimal.ZERO);
+        when(fineCalculator.calculateFine(anyString(), anyLong())).thenReturn(BigDecimal.ZERO);
         
         assertDoesNotThrow(() -> libraryService.returnItem(1, LocalDate.now()));
         

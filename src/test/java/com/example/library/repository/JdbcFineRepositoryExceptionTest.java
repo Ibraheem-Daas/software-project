@@ -5,7 +5,6 @@ import com.example.library.domain.Fine;
 import com.example.library.domain.Loan;
 import com.example.library.domain.MediaItem;
 import com.example.library.domain.User;
-import com.example.library.repository.DataAccessException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

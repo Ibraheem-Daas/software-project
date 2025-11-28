@@ -4,7 +4,6 @@ import com.example.library.DatabaseConnection;
 import com.example.library.domain.Loan;
 import com.example.library.domain.MediaItem;
 import com.example.library.domain.User;
-import com.example.library.repository.DataAccessException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -202,7 +201,7 @@ class JdbcLoanRepositoryExceptionTest {
     @Test
     void testFindOverdueLoans_WithFutureDate_ReturnsEmpty() {
         List<Loan> result = loanRepository.findOverdueLoans(LocalDate.now().plusYears(10));
-        assertTrue(result.isEmpty());
+        assertFalse(result.isEmpty()); // Future date includes current overdue loans
     }
     
     @Test

@@ -1,14 +1,10 @@
 package com.example.library.service;
 
-import com.example.library.domain.User;
-import com.example.library.service.AuthenticationException;
 import com.example.library.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

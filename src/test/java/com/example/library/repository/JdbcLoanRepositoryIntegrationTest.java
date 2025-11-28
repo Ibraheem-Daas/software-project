@@ -162,7 +162,8 @@ class JdbcLoanRepositoryIntegrationTest {
         MediaItem item1 = createAndSaveMediaItem("Item 1", "Author 1");
         MediaItem item2 = createAndSaveMediaItem("Item 2", "Author 2");
         
-        Loan activeLoan = createAndSaveLoan(user1.getUserId(), item1.getItemId());
+        // Create active loan (not explicitly used but needed for count assertion)
+        createAndSaveLoan(user1.getUserId(), item1.getItemId());
         
         Loan returnedLoan = createAndSaveLoan(user2.getUserId(), item2.getItemId());
         returnedLoan.setReturnDate(LocalDate.now());

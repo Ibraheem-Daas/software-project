@@ -1,11 +1,9 @@
 package com.example.library.repository;
 
-import com.example.library.domain.MediaItem;
 import com.example.library.DatabaseConnection;
+import com.example.library.domain.MediaItem;
 
-import java.math.BigDecimal;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

@@ -42,6 +42,7 @@ public class TestDatabaseContainer {
      * Starts the PostgreSQL Testcontainer and loads the schema.
      * This method is idempotent - calling it multiple times is safe.
      */
+    @SuppressWarnings("resource") // Container is intentionally kept open and closed via shutdown hook
     public static synchronized void start() {
         if (initialized) {
             return;
