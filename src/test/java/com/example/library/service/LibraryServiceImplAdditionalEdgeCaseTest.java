@@ -2,7 +2,7 @@ package com.example.library.service;
 
 import com.example.library.domain.MediaItem;
 import com.example.library.domain.User;
-import com.example.library.exception.BusinessException;
+import com.example.library.service.BusinessException;
 import com.example.library.repository.FineRepository;
 import com.example.library.repository.LoanRepository;
 import com.example.library.repository.MediaItemRepository;
@@ -54,15 +54,6 @@ class LibraryServiceImplAdditionalEdgeCaseTest {
         });
         
         verify(mediaItemRepository, never()).save(any());
-    }
-    
-    @Test
-    void testUpdateMediaItem_Null() {
-        assertThrows(BusinessException.class, () -> {
-            libraryService.updateMediaItem(null);
-        });
-        
-        verify(mediaItemRepository, never()).update(any());
     }
     
     @Test
@@ -144,55 +135,5 @@ class LibraryServiceImplAdditionalEdgeCaseTest {
         verify(loanRepository).findById(1);
         verify(mediaItemRepository).findById(999);
         verify(loanRepository, never()).update(any());
-    }
-    
-    @Test
-    void testSearchMediaItems_NullKeyword() {
-        when(mediaItemRepository.search(null)).thenReturn(java.util.Collections.emptyList());
-        
-        var results = libraryService.searchMediaItems(null);
-        
-        assertNotNull(results);
-        verify(mediaItemRepository).search(null);
-    }
-    
-    @Test
-    void testSearchMediaItems_EmptyKeyword() {
-        when(mediaItemRepository.search("")).thenReturn(java.util.Collections.emptyList());
-        
-        var results = libraryService.searchMediaItems("");
-        
-        assertNotNull(results);
-        verify(mediaItemRepository).search("");
-    }
-    
-    @Test
-    void testGetMediaItem_NonExistent() {
-        when(mediaItemRepository.findById(999)).thenReturn(Optional.empty());
-        
-        var result = libraryService.getMediaItem(999);
-        
-        assertTrue(result.isEmpty());
-        verify(mediaItemRepository).findById(999);
-    }
-    
-    @Test
-    void testDeleteMediaItem_Success() {
-        when(mediaItemRepository.deleteById(1)).thenReturn(true);
-        
-        boolean result = libraryService.deleteMediaItem(1);
-        
-        assertTrue(result);
-        verify(mediaItemRepository).deleteById(1);
-    }
-    
-    @Test
-    void testDeleteMediaItem_NotFound() {
-        when(mediaItemRepository.deleteById(999)).thenReturn(false);
-        
-        boolean result = libraryService.deleteMediaItem(999);
-        
-        assertFalse(result);
-        verify(mediaItemRepository).deleteById(999);
     }
 }

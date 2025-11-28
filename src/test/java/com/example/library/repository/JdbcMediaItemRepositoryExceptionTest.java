@@ -2,7 +2,7 @@ package com.example.library.repository;
 
 import com.example.library.DatabaseConnection;
 import com.example.library.domain.MediaItem;
-import com.example.library.exception.DataAccessException;
+import com.example.library.repository.DataAccessException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

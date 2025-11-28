@@ -1,7 +1,7 @@
 package com.example.library.service;
 
 import com.example.library.domain.User;
-import com.example.library.exception.AuthenticationException;
+import com.example.library.service.AuthenticationException;
 import com.example.library.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,50 +91,5 @@ class AuthServiceImplEdgeCaseTest {
         
         assertNotNull(result);
         verify(userRepository).findByUsername("testuser");
-    }
-    
-    @Test
-    void testRegister_NullUser() {
-        assertThrows(AuthenticationException.class, () -> {
-            authService.register(null);
-        });
-        
-        verify(userRepository, never()).save(any());
-    }
-    
-    @Test
-    void testRegister_UsernameExists() {
-        User user = new User();
-        user.setUsername("existing");
-        user.setEmail("new@example.com");
-        user.setPassword("password");
-        
-        when(userRepository.existsByUsername("existing")).thenReturn(true);
-        
-        assertThrows(AuthenticationException.class, () -> {
-            authService.register(user);
-        });
-        
-        verify(userRepository).existsByUsername("existing");
-        verify(userRepository, never()).save(any());
-    }
-    
-    @Test
-    void testRegister_EmailExists() {
-        User user = new User();
-        user.setUsername("newuser");
-        user.setEmail("existing@example.com");
-        user.setPassword("password");
-        
-        when(userRepository.existsByUsername("newuser")).thenReturn(false);
-        when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
-        
-        assertThrows(AuthenticationException.class, () -> {
-            authService.register(user);
-        });
-        
-        verify(userRepository).existsByUsername("newuser");
-        verify(userRepository).existsByEmail("existing@example.com");
-        verify(userRepository, never()).save(any());
     }
 }

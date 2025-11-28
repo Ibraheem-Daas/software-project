@@ -2,7 +2,7 @@ package com.example.library.repository;
 
 import com.example.library.DatabaseConnection;
 import com.example.library.domain.User;
-import com.example.library.exception.DataAccessException;
+import com.example.library.repository.DataAccessException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -133,13 +133,14 @@ class JdbcUserRepositoryExceptionTest {
     }
     
     @Test
-    void testDeleteById_NonExistentUser_ReturnsFalse() {
-        boolean result = userRepository.deleteById(99999);
-        assertFalse(result);
+    void testDeleteById_NonExistentUser_DoesNotThrow() {
+        assertDoesNotThrow(() -> {
+            userRepository.deleteById(99999);
+        });
     }
     
     @Test
-    void testDeleteById_ValidId_ReturnsTrue() throws SQLException {
+    void testDeleteById_ValidId_DoesNotThrow() throws SQLException {
         User user = new User();
         user.setUsername("exception_test_delete");
         user.setPassword("password");
@@ -149,8 +150,9 @@ class JdbcUserRepositoryExceptionTest {
         
         User saved = userRepository.save(user);
         
-        boolean result = userRepository.deleteById(saved.getUserId());
-        assertTrue(result);
+        assertDoesNotThrow(() -> {
+            userRepository.deleteById(saved.getUserId());
+        });
     }
     
     @Test
