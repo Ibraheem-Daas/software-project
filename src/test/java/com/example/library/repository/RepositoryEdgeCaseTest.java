@@ -146,7 +146,7 @@ class RepositoryEdgeCaseTest {
     
     @Test
     void testMediaItemFindByAuthor_EmptyString() {
-        List<MediaItem> items = mediaItemRepository.findByAuthor("");
+        List<MediaItem> items = mediaItemRepository.findByAuthorContaining("");
         assertTrue(items.isEmpty());
     }
     
@@ -165,7 +165,7 @@ class RepositoryEdgeCaseTest {
     
     @Test
     void testMediaItemFindAvailable() {
-        List<MediaItem> items = mediaItemRepository.findAvailable();
+        List<MediaItem> items = mediaItemRepository.findAvailableItems();
         assertNotNull(items);
         // All returned items should have available copies > 0
         items.forEach(item -> assertTrue(item.getAvailableCopies() > 0));
@@ -265,7 +265,7 @@ class RepositoryEdgeCaseTest {
     
     @Test
     void testLoanFindOverdueLoans() {
-        List<Loan> loans = loanRepository.findOverdueLoans();
+        List<Loan> loans = loanRepository.findOverdueLoans(LocalDate.now());
         assertNotNull(loans);
         // All returned loans should be overdue
         loans.forEach(loan -> assertTrue(loan.getDueDate().isBefore(LocalDate.now())));
@@ -369,8 +369,8 @@ class RepositoryEdgeCaseTest {
     
     @Test
     void testFineFindByLoanId_NonExistent() {
-        List<Fine> fines = fineRepository.findByLoanId(99999);
-        assertTrue(fines.isEmpty());
+        Optional<Fine> fine = fineRepository.findByLoanId(99999);
+        assertFalse(fine.isPresent());
     }
     
     @Test
@@ -380,8 +380,8 @@ class RepositoryEdgeCaseTest {
     }
     
     @Test
-    void testFineFindUnpaidFines() {
-        List<Fine> fines = fineRepository.findUnpaidFines();
+    void testFineFindByStatus_Unpaid() {
+        List<Fine> fines = fineRepository.findByStatus("UNPAID");
         assertNotNull(fines);
         // All returned fines should be unpaid
         fines.forEach(fine -> assertEquals("UNPAID", fine.getStatus()));

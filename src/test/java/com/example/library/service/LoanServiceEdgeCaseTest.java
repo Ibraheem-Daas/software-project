@@ -2,8 +2,12 @@ package com.example.library.service;
 
 import com.example.library.domain.Loan;
 import com.example.library.domain.MediaItem;
+import com.example.library.domain.User;
+import com.example.library.repository.FineRepository;
 import com.example.library.repository.LoanRepository;
 import com.example.library.repository.MediaItemRepository;
+import com.example.library.repository.UserRepository;
+import com.example.library.service.fine.FineCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,28 +21,41 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class LoanServiceEdgeCaseTest {
+class LibraryServiceImplEdgeCaseTest {
+    
+    @Mock
+    private UserRepository userRepository;
+    
+    @Mock
+    private MediaItemRepository mediaItemRepository;
     
     @Mock
     private LoanRepository loanRepository;
     
     @Mock
-    private MediaItemRepository mediaItemRepository;
+    private FineRepository fineRepository;
     
-    private LoanService loanService;
+    @Mock
+    private FineCalculator fineCalculator;
+    
+    private LibraryServiceImpl libraryService;
     
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        loanService = new LoanService(loanRepository, mediaItemRepository);
+        libraryService = new LibraryServiceImpl(userRepository, mediaItemRepository, 
+                loanRepository, fineRepository, fineCalculator);
     }
     
     @Test
-    void testCheckoutItem_MediaItemNotFound() {
+    void testBorrowItem_MediaItemNotFound() {
+        User user = new User();
+        user.setUserId(1);
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(mediaItemRepository.findById(999)).thenReturn(Optional.empty());
         
         assertThrows(RuntimeException.class, () -> {
-            loanService.checkoutItem(1, 999);
+            libraryService.borrowItem(1, 999, LocalDate.now());
         });
         
         verify(mediaItemRepository).findById(999);
@@ -46,17 +63,20 @@ class LoanServiceEdgeCaseTest {
     }
     
     @Test
-    void testCheckoutItem_NoAvailableCopies() {
+    void testBorrowItem_NoAvailableCopies() {
+        User user = new User();
+        user.setUserId(1);
         MediaItem item = new MediaItem();
         item.setItemId(1);
         item.setTitle("Test Book");
         item.setAvailableCopies(0);
         item.setTotalCopies(1);
         
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
         
         assertThrows(RuntimeException.class, () -> {
-            loanService.checkoutItem(1, 1);
+            libraryService.borrowItem(1, 1, LocalDate.now());
         });
         
         verify(mediaItemRepository).findById(1);
@@ -64,10 +84,13 @@ class LoanServiceEdgeCaseTest {
     }
     
     @Test
-    void testCheckoutItem_Success() {
+    void testBorrowItem_Success() {
+        User user = new User();
+        user.setUserId(1);
         MediaItem item = new MediaItem();
         item.setItemId(1);
         item.setTitle("Test Book");
+        item.setType("BOOK");
         item.setAvailableCopies(5);
         item.setTotalCopies(10);
         
@@ -77,11 +100,12 @@ class LoanServiceEdgeCaseTest {
         savedLoan.setItemId(1);
         savedLoan.setStatus("ACTIVE");
         
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
         when(loanRepository.save(any(Loan.class))).thenReturn(savedLoan);
         when(mediaItemRepository.update(any(MediaItem.class))).thenReturn(item);
         
-        Loan result = loanService.checkoutItem(1, 1);
+        Loan result = libraryService.borrowItem(1, 1, LocalDate.now());
         
         assertNotNull(result);
         assertEquals("ACTIVE", result.getStatus());
@@ -93,7 +117,7 @@ class LoanServiceEdgeCaseTest {
         when(loanRepository.findById(999)).thenReturn(Optional.empty());
         
         assertThrows(RuntimeException.class, () -> {
-            loanService.returnItem(999);
+            libraryService.returnItem(999, LocalDate.now());
         });
         
         verify(loanRepository).findById(999);
@@ -111,7 +135,7 @@ class LoanServiceEdgeCaseTest {
         when(loanRepository.findById(1)).thenReturn(Optional.of(loan));
         
         assertThrows(RuntimeException.class, () -> {
-            loanService.returnItem(1);
+            libraryService.returnItem(1, LocalDate.now());
         });
         
         verify(loanRepository).findById(1);
@@ -137,30 +161,12 @@ class LoanServiceEdgeCaseTest {
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
         when(loanRepository.update(any(Loan.class))).thenReturn(loan);
         when(mediaItemRepository.update(any(MediaItem.class))).thenReturn(item);
+        when(fineCalculator.calculateFine(any(), any())).thenReturn(BigDecimal.ZERO);
         
-        Loan result = loanService.returnItem(1);
+        assertDoesNotThrow(() -> libraryService.returnItem(1, LocalDate.now()));
         
-        assertNotNull(result);
-        assertEquals("RETURNED", result.getStatus());
-        assertNotNull(result.getReturnDate());
+        verify(loanRepository).update(argThat(l -> l.getStatus().equals("RETURNED") && l.getReturnDate() != null));
         verify(mediaItemRepository).update(argThat(mi -> mi.getAvailableCopies() == 6));
     }
     
-    @Test
-    void testGetOverdueLoans() {
-        assertDoesNotThrow(() -> {
-            loanService.getOverdueLoans();
-        });
-        
-        verify(loanRepository).findOverdueLoans();
-    }
-    
-    @Test
-    void testGetLoansByUserId() {
-        assertDoesNotThrow(() -> {
-            loanService.getLoansByUserId(1);
-        });
-        
-        verify(loanRepository).findByUserId(1);
-    }
 }
