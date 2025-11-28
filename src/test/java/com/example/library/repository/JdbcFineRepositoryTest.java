@@ -314,4 +314,77 @@ class JdbcFineRepositoryTest {
         assertEquals("PAID", updated.getStatus(), "Status should be PAID");
         assertNotNull(updated.getPaidDate(), "Paid date should be set");
     }
+    
+    @Test
+    void testExistsByLoanId_ExistingLoan_ReturnsTrue() {
+        // Arrange - Create a fine for the test loan
+        Fine fine = new Fine();
+        fine.setLoanId(testLoanId);
+        fine.setAmount(new BigDecimal("5.00"));
+        fine.setIssuedDate(LocalDate.now());
+        fine.setStatus("UNPAID");
+        fineRepository.save(fine);
+        
+        // Act
+        boolean exists = fineRepository.existsByLoanId(testLoanId);
+        
+        // Assert
+        assertTrue(exists, "Should return true for existing loan with fine");
+    }
+    
+    @Test
+    void testExistsByLoanId_NonExistentLoan_ReturnsFalse() {
+        // Act
+        boolean exists = fineRepository.existsByLoanId(999999);
+        
+        // Assert
+        assertFalse(exists, "Should return false for non-existent loan");
+    }
+    
+    @Test
+    void testFindByUserId_WithMultipleFines_ReturnsAllUserFines() throws SQLException {
+        // Arrange - Create multiple fines for the test user
+        Fine fine1 = new Fine();
+        fine1.setLoanId(testLoanId);
+        fine1.setAmount(new BigDecimal("10.00"));
+        fine1.setIssuedDate(LocalDate.now().minusDays(3));
+        fine1.setStatus("UNPAID");
+        fineRepository.save(fine1);
+        
+        // Create another loan for the same user
+        Integer testLoanId2;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "INSERT INTO loan (user_id, item_id, loan_date, due_date, return_date, status) " +
+                    "VALUES (?, ?, ?, ?, ?, ?) RETURNING loan_id")) {
+                pstmt.setInt(1, testUserId);
+                pstmt.setInt(2, testItemId);
+                pstmt.setDate(3, java.sql.Date.valueOf(LocalDate.now().minusDays(15)));
+                pstmt.setDate(4, java.sql.Date.valueOf(LocalDate.now().minusDays(3)));
+                pstmt.setNull(5, java.sql.Types.DATE);
+                pstmt.setString(6, "ACTIVE");
+                var rs = pstmt.executeQuery();
+                rs.next();
+                testLoanId2 = rs.getInt(1);
+            }
+        }
+        
+        Fine fine2 = new Fine();
+        fine2.setLoanId(testLoanId2);
+        fine2.setAmount(new BigDecimal("5.00"));
+        fine2.setIssuedDate(LocalDate.now().minusDays(1));
+        fine2.setStatus("PAID");
+        fine2.setPaidDate(LocalDate.now());
+        fineRepository.save(fine2);
+        
+        // Act
+        List<Fine> userFines = fineRepository.findByUserId(testUserId);
+        
+        // Assert
+        assertEquals(2, userFines.size(), "Should find 2 fines for the user");
+        assertTrue(userFines.stream().anyMatch(f -> f.getStatus().equals("UNPAID")), 
+                   "Should contain UNPAID fine");
+        assertTrue(userFines.stream().anyMatch(f -> f.getStatus().equals("PAID")), 
+                   "Should contain PAID fine");
+    }
 }
