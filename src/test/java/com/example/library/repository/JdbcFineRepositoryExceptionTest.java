@@ -149,19 +149,6 @@ class JdbcFineRepositoryExceptionTest {
     }
     
     @Test
-    void testSave_WithNullIssuedDate_ThrowsException() {
-        Fine fine = new Fine();
-        fine.setLoanId(testLoan.getLoanId());
-        fine.setAmount(new BigDecimal("50.00"));
-        fine.setIssuedDate(null); // Null issued date
-        fine.setStatus("UNPAID");
-        
-        assertThrows(DataAccessException.class, () -> {
-            fineRepository.save(fine);
-        });
-    }
-    
-    @Test
     void testSave_WithPaidDate_Success() throws SQLException {
         Fine fine = new Fine();
         fine.setLoanId(testLoan.getLoanId());

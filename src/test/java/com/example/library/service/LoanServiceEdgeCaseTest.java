@@ -102,14 +102,16 @@ class LibraryServiceImplEdgeCaseTest {
         
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
+        when(loanRepository.findOverdueLoans(any(LocalDate.class))).thenReturn(java.util.Collections.emptyList());
+        when(fineRepository.findByUserId(1)).thenReturn(java.util.Collections.emptyList());
         when(loanRepository.save(any(Loan.class))).thenReturn(savedLoan);
-        when(mediaItemRepository.update(any(MediaItem.class))).thenReturn(item);
+        doNothing().when(mediaItemRepository).updateAvailableCopies(anyInt(), anyInt());
         
         Loan result = libraryService.borrowItem(1, 1, LocalDate.now());
         
         assertNotNull(result);
         assertEquals("ACTIVE", result.getStatus());
-        verify(mediaItemRepository).update(argThat(mi -> mi.getAvailableCopies() == 4));
+        verify(mediaItemRepository).updateAvailableCopies(1, 4);
     }
     
     @Test
@@ -121,7 +123,7 @@ class LibraryServiceImplEdgeCaseTest {
         });
         
         verify(loanRepository).findById(999);
-        verify(mediaItemRepository, never()).update(any());
+        verify(mediaItemRepository, never()).updateAvailableCopies(anyInt(), anyInt());
     }
     
     @Test
@@ -139,7 +141,7 @@ class LibraryServiceImplEdgeCaseTest {
         });
         
         verify(loanRepository).findById(1);
-        verify(loanRepository, never()).update(any());
+        verify(loanRepository, never()).updateStatus(anyInt(), anyString(), any(LocalDate.class));
     }
     
     @Test
@@ -159,14 +161,14 @@ class LibraryServiceImplEdgeCaseTest {
         
         when(loanRepository.findById(1)).thenReturn(Optional.of(loan));
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
-        when(loanRepository.update(any(Loan.class))).thenReturn(loan);
-        when(mediaItemRepository.update(any(MediaItem.class))).thenReturn(item);
+        doNothing().when(loanRepository).updateStatus(anyInt(), anyString(), any(LocalDate.class));
+        doNothing().when(mediaItemRepository).updateAvailableCopies(anyInt(), anyInt());
         when(fineCalculator.calculateFine(any(), any())).thenReturn(BigDecimal.ZERO);
         
         assertDoesNotThrow(() -> libraryService.returnItem(1, LocalDate.now()));
         
-        verify(loanRepository).update(argThat(l -> l.getStatus().equals("RETURNED") && l.getReturnDate() != null));
-        verify(mediaItemRepository).update(argThat(mi -> mi.getAvailableCopies() == 6));
+        verify(loanRepository).updateStatus(eq(1), eq("RETURNED"), any(LocalDate.class));
+        verify(mediaItemRepository).updateAvailableCopies(eq(1), eq(6));
     }
     
 }

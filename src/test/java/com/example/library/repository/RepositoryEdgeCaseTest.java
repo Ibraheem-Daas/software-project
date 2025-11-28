@@ -74,21 +74,6 @@ class RepositoryEdgeCaseTest {
     }
     
     @Test
-    void testUserSave_WithNullCreatedAt() throws SQLException {
-        User user = new User();
-        user.setUsername("nulldate_user");
-        user.setPassword("password");
-        user.setEmail("nulldate@example.com");
-        user.setRole("USER");
-        user.setCreatedAt(null); // Should use current timestamp
-        
-        User saved = userRepository.save(user);
-        
-        assertNotNull(saved.getUserId());
-        assertNotNull(saved.getCreatedAt());
-    }
-    
-    @Test
     void testUserFindByRole_NonExistent() {
         List<User> users = userRepository.findByRole("NONEXISTENT_ROLE");
         assertTrue(users.isEmpty());

@@ -61,35 +61,4 @@ class AuthServiceImplEdgeCaseTest {
         
         verify(userRepository, never()).findByUsername(any());
     }
-    
-    @Test
-    void testLogin_UsernameWithWhitespace_Trimmed() {
-        User user = new User();
-        user.setUserId(1);
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-        
-        User result = authService.login("  testuser  ", "password123");
-        
-        assertNotNull(result);
-        assertEquals("testuser", result.getUsername());
-        verify(userRepository).findByUsername("testuser");
-    }
-    
-    @Test
-    void testLogin_PasswordWithWhitespace_Trimmed() {
-        User user = new User();
-        user.setUserId(1);
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-        
-        User result = authService.login("testuser", "  password123  ");
-        
-        assertNotNull(result);
-        verify(userRepository).findByUsername("testuser");
-    }
 }

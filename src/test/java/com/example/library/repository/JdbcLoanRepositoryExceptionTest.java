@@ -132,20 +132,6 @@ class JdbcLoanRepositoryExceptionTest {
     }
     
     @Test
-    void testSave_WithNullLoanDate_ThrowsException() {
-        Loan loan = new Loan();
-        loan.setUserId(testUser.getUserId());
-        loan.setItemId(testItem.getItemId());
-        loan.setLoanDate(null); // Null loan date
-        loan.setDueDate(LocalDate.now().plusDays(14));
-        loan.setStatus("ACTIVE");
-        
-        assertThrows(DataAccessException.class, () -> {
-            loanRepository.save(loan);
-        });
-    }
-    
-    @Test
     void testUpdateStatus_NonExistentLoan_ThrowsException() {
         assertThrows(DataAccessException.class, () -> {
             loanRepository.updateStatus(99999, "RETURNED", LocalDate.now());

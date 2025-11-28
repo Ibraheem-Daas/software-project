@@ -82,8 +82,10 @@ class LibraryServiceImplAdditionalEdgeCaseTest {
         
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
+        when(loanRepository.findOverdueLoans(any(LocalDate.class))).thenReturn(java.util.Collections.emptyList());
+        when(fineRepository.findByUserId(1)).thenReturn(java.util.Collections.emptyList());
         when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(mediaItemRepository.update(any())).thenReturn(item);
+        doNothing().when(mediaItemRepository).updateAvailableCopies(anyInt(), anyInt());
         
         var loan = libraryService.borrowItem(1, 1, LocalDate.now());
         
@@ -105,8 +107,10 @@ class LibraryServiceImplAdditionalEdgeCaseTest {
         
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
+        when(loanRepository.findOverdueLoans(any(LocalDate.class))).thenReturn(java.util.Collections.emptyList());
+        when(fineRepository.findByUserId(1)).thenReturn(java.util.Collections.emptyList());
         when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(mediaItemRepository.update(any())).thenReturn(item);
+        doNothing().when(mediaItemRepository).updateAvailableCopies(anyInt(), anyInt());
         
         var loan = libraryService.borrowItem(1, 1, LocalDate.now());
         
