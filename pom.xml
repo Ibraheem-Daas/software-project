@@ -112,7 +112,6 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>com/example/library/App.class</exclude>
                                 <exclude>com/example/library/ui/**/*.class</exclude>
                                 <exclude>com/example/library/ReservationFeatureTest.class</exclude>
                             </excludes>
@@ -148,7 +147,6 @@
                 </executions>
                 <configuration>
                     <excludes>
-                        <exclude>com/example/library/App.class</exclude>
                         <exclude>com/example/library/ui/**/*.class</exclude>
                         <exclude>com/example/library/ReservationFeatureTest.class</exclude>
                     </excludes>
