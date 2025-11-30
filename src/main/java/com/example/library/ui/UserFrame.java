@@ -24,14 +24,16 @@ public class UserFrame extends JFrame {
     private final LibraryService libraryService;
     private final PaymentService paymentService;
     private final AuthService authService;
+    private final com.example.library.repository.UserRepository userRepository;
     
     private JTabbedPane tabbedPane;
     
-    public UserFrame(User currentUser, AuthService authService, LibraryService libraryService, PaymentService paymentService) {
+    public UserFrame(User currentUser, AuthService authService, LibraryService libraryService, PaymentService paymentService, com.example.library.repository.UserRepository userRepository) {
         this.currentUser = currentUser;
         this.authService = authService;
         this.libraryService = libraryService;
         this.paymentService = paymentService;
+        this.userRepository = userRepository;
         
         initializeUI();
     }
@@ -48,6 +50,7 @@ public class UserFrame extends JFrame {
         // Add tabs
         tabbedPane.addTab("Search Items", createSearchItemsPanel());
         tabbedPane.addTab("Borrow Item", createBorrowItemPanel());
+        tabbedPane.addTab("My Active Loans", createActiveLoansPanel());
         tabbedPane.addTab("Return Item", createReturnItemPanel());
         tabbedPane.addTab("My Fines", createFinesPanel());
         tabbedPane.addTab("Profile", createProfilePanel());
@@ -209,6 +212,143 @@ public class UserFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Error borrowing item: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
             infoArea.setText("✗ Error:\n" + ex.getMessage());
+        }
+    }
+    
+    private JPanel createActiveLoansPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        // Title
+        JLabel titleLabel = new JLabel("My Active Loans - Potential Fines");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        panel.add(titleLabel, BorderLayout.NORTH);
+        
+        // Table
+        String[] columns = {"Loan ID", "Item ID", "Title", "Loan Date", "Due Date", "Days Until Due", "Late Fee/Day", "Return"};
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable table = new JTable(tableModel);
+        
+        // Add button column renderer
+        table.getColumnModel().getColumn(7).setCellRenderer((tbl, value, isSelected, hasFocus, row, column) -> {
+            JButton button = new JButton("Return Now");
+            return button;
+        });
+        
+        // Add button column editor
+        table.getColumnModel().getColumn(7).setCellEditor(new javax.swing.DefaultCellEditor(new JCheckBox()) {
+            private JButton button = new JButton("Return Now");
+            
+            {
+                button.addActionListener(e -> {
+                    int row = table.getSelectedRow();
+                    if (row >= 0) {
+                        int loanId = (Integer) tableModel.getValueAt(row, 0);
+                        returnItemQuick(loanId, tableModel);
+                    }
+                    fireEditingStopped();
+                });
+            }
+            
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                return button;
+            }
+        });
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Refresh button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> loadActiveLoans(tableModel));
+        buttonPanel.add(refreshButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        // Load initial data
+        loadActiveLoans(tableModel);
+        
+        return panel;
+    }
+    
+    private void loadActiveLoans(DefaultTableModel tableModel) {
+        try {
+            List<Loan> loans = libraryService.getUserLoans(currentUser.getUserId());
+            
+            // Clear table
+            tableModel.setRowCount(0);
+            
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate today = LocalDate.now();
+            
+            // Only show ACTIVE loans
+            for (Loan loan : loans) {
+                if ("ACTIVE".equals(loan.getStatus())) {
+                    // Get item details
+                    MediaItem item = libraryService.searchItems("").stream()
+                            .filter(i -> i.getItemId() == loan.getItemId())
+                            .findFirst()
+                            .orElse(null);
+                    
+                    String itemTitle = item != null ? item.getTitle() : "Unknown";
+                    LocalDate dueDate = loan.getDueDate();
+                    long daysUntilDue = java.time.temporal.ChronoUnit.DAYS.between(today, dueDate);
+                    
+                    String daysUntilDueStr;
+                    if (daysUntilDue > 0) {
+                        daysUntilDueStr = daysUntilDue + " days";
+                    } else if (daysUntilDue == 0) {
+                        daysUntilDueStr = "DUE TODAY!";
+                    } else {
+                        daysUntilDueStr = "OVERDUE " + Math.abs(daysUntilDue) + " days";
+                    }
+                    
+                    // Get late fee from item
+                    BigDecimal lateFee = item != null && item.getLateFeesPerDay() != null ? item.getLateFeesPerDay() : BigDecimal.ZERO;
+                    
+                    Object[] row = {
+                        loan.getLoanId(),
+                        loan.getItemId(),
+                        itemTitle,
+                        loan.getLoanDate().format(formatter),
+                        dueDate.format(formatter),
+                        daysUntilDueStr,
+                        lateFee + " NIS",
+                        "Return"
+                    };
+                    tableModel.addRow(row);
+                }
+            }
+            
+            if (tableModel.getRowCount() == 0) {
+                Object[] emptyRow = {"No active loans", "", "", "", "", "", "", ""};
+                tableModel.addRow(emptyRow);
+            }
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error loading active loans: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void returnItemQuick(int loanId, DefaultTableModel tableModel) {
+        try {
+            libraryService.returnItem(loanId, LocalDate.now());
+            JOptionPane.showMessageDialog(this, "Item returned successfully!",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            loadActiveLoans(tableModel); // Refresh
+        } catch (BusinessException ex) {
+            JOptionPane.showMessageDialog(this, "Cannot return item: " + ex.getMessage(),
+                    "Business Error", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error returning item: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -553,7 +693,7 @@ public class UserFrame extends JFrame {
             dispose();
             // Reopen login frame
             SwingUtilities.invokeLater(() -> {
-                LoginFrame loginFrame = new LoginFrame(authService, libraryService, paymentService);
+                LoginFrame loginFrame = new LoginFrame(authService, libraryService, paymentService, userRepository, null, null, null);
                 loginFrame.setVisible(true);
             });
         }

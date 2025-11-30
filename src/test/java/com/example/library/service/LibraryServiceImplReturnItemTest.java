@@ -236,4 +236,70 @@ class LibraryServiceImplReturnItemTest {
         verify(mediaItemRepository, never()).updateAvailableCopies(anyInt(), anyInt());
         verify(fineRepository, never()).save(any(Fine.class));
     }
+    
+    @Test
+    void testReturnItem_statusReturnedButNoReturnDate_throws() {
+        // Arrange - tests the branch where returnDate is null but status is "RETURNED"
+        int loanId = 6;
+        LocalDate returnDate = LocalDate.now();
+        
+        Loan loan = new Loan();
+        loan.setLoanId(loanId);
+        loan.setUserId(6);
+        loan.setItemId(60);
+        loan.setLoanDate(LocalDate.of(2025, 11, 1));
+        loan.setDueDate(LocalDate.of(2025, 11, 29));
+        loan.setReturnDate(null); // No return date
+        loan.setStatus("RETURNED"); // But status is RETURNED
+        
+        when(loanRepository.findById(loanId)).thenReturn(Optional.of(loan));
+        
+        // Act & Assert
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> libraryService.returnItem(loanId, returnDate),
+                "Should throw BusinessException when status is RETURNED even if returnDate is null"
+        );
+        
+        assertTrue(exception.getMessage().contains("already been returned"));
+        verify(loanRepository, never()).updateStatus(anyInt(), anyString(), any(LocalDate.class));
+    }
+    
+    @Test
+    void testReturnItem_overdue_zeroFineAmount_noFineSaved() {
+        // Arrange - tests the branch where fineAmount == 0 (line 197: if fineAmount > 0)
+        int loanId = 7;
+        int itemId = 70;
+        LocalDate loanDate = LocalDate.of(2025, 11, 1);
+        LocalDate dueDate = LocalDate.of(2025, 11, 15);
+        LocalDate returnDate = LocalDate.of(2025, 11, 20); // 5 days overdue
+        
+        Loan loan = new Loan();
+        loan.setLoanId(loanId);
+        loan.setUserId(7);
+        loan.setItemId(itemId);
+        loan.setLoanDate(loanDate);
+        loan.setDueDate(dueDate);
+        loan.setReturnDate(null);
+        loan.setStatus("ACTIVE");
+        
+        MediaItem item = new MediaItem();
+        item.setItemId(itemId);
+        item.setTitle("Zero Fine Item");
+        item.setType("MAGAZINE");
+        item.setAvailableCopies(2);
+        
+        when(loanRepository.findById(loanId)).thenReturn(Optional.of(loan));
+        when(mediaItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+        // Mock FineCalculator to return ZERO fine
+        when(fineCalculator.calculateFine("MAGAZINE", 5)).thenReturn(BigDecimal.ZERO);
+        
+        // Act
+        libraryService.returnItem(loanId, returnDate);
+        
+        // Assert - fine should NOT be saved when amount is zero
+        verify(loanRepository).updateStatus(loanId, "RETURNED", returnDate);
+        verify(mediaItemRepository).updateAvailableCopies(itemId, 3);
+        verify(fineRepository, never()).save(any(Fine.class)); // Key assertion
+    }
 }

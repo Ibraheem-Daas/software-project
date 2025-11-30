@@ -143,4 +143,27 @@ class FineCalculatorTest {
         );
         assertTrue(exception.getMessage().contains("Strategy cannot be null"));
     }
+    
+    @Test
+    void testRegisterStrategy_EmptyMediaType_ThrowsException() {
+        // Arrange
+        FineStrategy strategy = overdueDays -> BigDecimal.TEN;
+        
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> fineCalculator.registerStrategy("   ", strategy)
+        );
+        assertTrue(exception.getMessage().contains("cannot be null or empty"));
+    }
+    
+    @Test
+    void testCalculateFine_ActuallyEmptyString_ThrowsException() {
+        // Test truly empty string (not whitespace)
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> fineCalculator.calculateFine("", 5)
+        );
+        assertTrue(exception.getMessage().contains("cannot be null or empty"));
+    }
 }

@@ -44,7 +44,7 @@ public class LibraryApplication {
             }
             
             // Create and show login frame
-            LoginFrame loginFrame = new LoginFrame(authService, libraryService, paymentService);
+            LoginFrame loginFrame = new LoginFrame(authService, libraryService, paymentService, userRepository, mediaItemRepository, fineRepository, loanRepository);
             loginFrame.setVisible(true);
         });
     }

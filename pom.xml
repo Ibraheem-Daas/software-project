@@ -91,9 +91,11 @@
                 <configuration>
                     <argLine>@{argLine} -Djava.awt.headless=true -javaagent:"${settings.localRepository}/net/bytebuddy/byte-buddy-agent/1.15.4/byte-buddy-agent-1.15.4.jar"</argLine>
                     <!-- Exclude GUI tests - they require a non-headless environment with display server -->
+                    <!-- Exclude Testcontainers integration tests - require Docker -->
                     <excludes>
                         <exclude>**/*FrameTest.java</exclude>
                         <exclude>**/*SwingTest.java</exclude>
+                        <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                     <environmentVariables>
                         <DOCKER_HOST>tcp://localhost:2375</DOCKER_HOST>

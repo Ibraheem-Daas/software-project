@@ -15,6 +15,10 @@ public class LoginFrame extends JFrame {
     private final AuthService authService;
     private final LibraryService libraryService;
     private final PaymentService paymentService;
+    private final com.example.library.repository.UserRepository userRepository;
+    private final com.example.library.repository.MediaItemRepository mediaItemRepository;
+    private final com.example.library.repository.FineRepository fineRepository;
+    private final com.example.library.repository.LoanRepository loanRepository;
     
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -22,13 +26,21 @@ public class LoginFrame extends JFrame {
     
     // Constructor for testing with minimal dependencies
     public LoginFrame(AuthService authService) {
-        this(authService, null, null);
+        this(authService, null, null, null, null, null, null);
     }
     
-    public LoginFrame(AuthService authService, LibraryService libraryService, PaymentService paymentService) {
+    public LoginFrame(AuthService authService, LibraryService libraryService, PaymentService paymentService, 
+                      com.example.library.repository.UserRepository userRepository,
+                      com.example.library.repository.MediaItemRepository mediaItemRepository,
+                      com.example.library.repository.FineRepository fineRepository,
+                      com.example.library.repository.LoanRepository loanRepository) {
         this.authService = authService;
         this.libraryService = libraryService;
         this.paymentService = paymentService;
+        this.userRepository = userRepository;
+        this.mediaItemRepository = mediaItemRepository;
+        this.fineRepository = fineRepository;
+        this.loanRepository = loanRepository;
         
         initializeUI();
     }
@@ -147,10 +159,10 @@ public class LoginFrame extends JFrame {
             
             // Open appropriate frame based on role
             if (authService.isAdmin(user)) {
-                AdminFrame adminFrame = new AdminFrame(user, authService, libraryService, paymentService);
+                AdminFrame adminFrame = new AdminFrame(user, authService, libraryService, paymentService, userRepository, mediaItemRepository, fineRepository, loanRepository);
                 adminFrame.setVisible(true);
             } else {
-                UserFrame userFrame = new UserFrame(user, authService, libraryService, paymentService);
+                UserFrame userFrame = new UserFrame(user, authService, libraryService, paymentService, userRepository);
                 userFrame.setVisible(true);
             }
             

@@ -420,6 +420,27 @@ class ReservationServiceImplTest {
         assertFalse(result);
     }
     
+    @Test
+    @DisplayName("Should return false when user has reservations for different items")
+    void testHasActiveReservation_DifferentItem() {
+        // Arrange
+        int userId = 1;
+        int targetItemId = 5;
+        
+        // User has reservations for items 1 and 2, but not for item 5
+        Reservation res1 = createReservation(1, userId, 1);
+        Reservation res2 = createReservation(2, userId, 2);
+        
+        when(reservationRepository.findActiveByUserId(userId))
+            .thenReturn(Arrays.asList(res1, res2));
+        
+        // Act
+        boolean result = reservationService.hasActiveReservation(userId, targetItemId);
+        
+        // Assert - should return false because item 5 is not in the list
+        assertFalse(result);
+    }
+    
     // Helper methods
     
     private User createUser(int userId, String username, String email) {
@@ -454,4 +475,73 @@ class ReservationServiceImplTest {
         reservation.setStatus("ACTIVE");
         return reservation;
     }
+    
+    @Test
+    @DisplayName("Should throw exception when canceling non-active reservation")
+    void testCancelReservation_NotActive() {
+        // Arrange - reservation is already fulfilled
+        Reservation reservation = new Reservation();
+        reservation.setReservationId(1);
+        reservation.setUserId(1);
+        reservation.setStatus("FULFILLED"); // Not ACTIVE
+        
+        when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
+        
+        // Act & Assert
+        BusinessException exception = assertThrows(BusinessException.class, 
+            () -> reservationService.cancelReservation(1, 1));
+        
+        assertTrue(exception.getMessage().contains("not active"));
+        verify(reservationRepository, never()).update(any());
+    }
+    
+    @Test
+    @DisplayName("Should return -1 for queue position when reservation is not active")
+    void testGetQueuePosition_NotActive() {
+        // Arrange
+        Reservation reservation = new Reservation();
+        reservation.setReservationId(1);
+        reservation.setUserId(1);
+        reservation.setItemId(1);
+        reservation.setStatus("FULFILLED"); // Not ACTIVE
+        
+        when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
+        
+        // Act
+        int position = reservationService.getQueuePosition(1);
+        
+        // Assert
+        assertEquals(-1, position);
+    }
+    
+    @Test
+    @DisplayName("Should return -1 when reservation not found in queue")
+    void testGetQueuePosition_NotInQueue() {
+        // Arrange
+        int reservationId = 99;
+        int itemId = 1;
+        
+        Reservation targetReservation = new Reservation();
+        targetReservation.setReservationId(reservationId);
+        targetReservation.setUserId(5);
+        targetReservation.setItemId(itemId);
+        targetReservation.setStatus("ACTIVE");
+        
+        // Queue doesn't contain the target reservation
+        List<Reservation> queue = Arrays.asList(
+            createReservation(1, 1, itemId),
+            createReservation(2, 2, itemId)
+        );
+        
+        when(reservationRepository.findById(reservationId))
+            .thenReturn(Optional.of(targetReservation));
+        when(reservationRepository.findActiveByItemId(itemId)).thenReturn(queue);
+        
+        // Act
+        int position = reservationService.getQueuePosition(reservationId);
+        
+        // Assert
+        assertEquals(-1, position); // Not found in queue
+    }
 }
+

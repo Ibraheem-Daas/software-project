@@ -139,4 +139,52 @@ class LibraryServiceImplAdditionalEdgeCaseTest {
         verify(mediaItemRepository).findById(999);
         verify(loanRepository, never()).update(any());
     }
+    
+    @Test
+    void testBorrowItem_CD_Type() {
+        User user = new User();
+        user.setUserId(1);
+        
+        MediaItem item = new MediaItem();
+        item.setItemId(1);
+        item.setType("CD"); // CD type - 7 days loan period
+        item.setAvailableCopies(5);
+        item.setLateFeesPerDay(new BigDecimal("1.00"));
+        
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
+        when(loanRepository.findOverdueLoans(any(LocalDate.class))).thenReturn(java.util.Collections.emptyList());
+        when(fineRepository.calculateTotalUnpaidByUserId(1)).thenReturn(BigDecimal.ZERO);
+        when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(mediaItemRepository).updateAvailableCopies(anyInt(), anyInt());
+        
+        var loan = libraryService.borrowItem(1, 1, LocalDate.now());
+        
+        // CD loan period should be 7 days
+        assertNotNull(loan);
+        assertEquals(LocalDate.now().plusDays(7), loan.getDueDate());
+        verify(loanRepository).save(any());
+    }
+    
+    @Test
+    void testBorrowItem_UserNotEligible_WithUnpaidFines() {
+        User user = new User();
+        user.setUserId(1);
+        
+        MediaItem item = new MediaItem();
+        item.setItemId(1);
+        item.setType("BOOK");
+        item.setAvailableCopies(5);
+        
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(mediaItemRepository.findById(1)).thenReturn(Optional.of(item));
+        when(loanRepository.findOverdueLoans(any(LocalDate.class))).thenReturn(java.util.Collections.emptyList());
+        when(fineRepository.calculateTotalUnpaidByUserId(1)).thenReturn(new BigDecimal("25.00")); // Has unpaid fines
+        
+        assertThrows(BusinessException.class, () -> {
+            libraryService.borrowItem(1, 1, LocalDate.now());
+        }, "User is not eligible to borrow");
+        
+        verify(loanRepository, never()).save(any());
+    }
 }
